@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Japan</title>
+<script>
+// EDIT THESE TWO VALUES BY HAND.
+const TRIP_DATE = "2027-03-27"; // trip start, YYYY-MM-DD
+const SAVED = 0;                // dollars saved toward the $4,000 target
+
+// BEGIN LOGIC
+const TARGET = 4000;
+
+function daysUntil(tripDateStr, today) {
+  var p = tripDateStr.split("-");
+  var trip = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  var t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.round((trip - t) / 86400000);
+}
+
+function progress(saved) {
+  saved = Number(saved) || 0;
+  var pct = Math.min(100, Math.max(0, (saved / TARGET) * 100));
+  var whole = Math.round(Math.min(TARGET, Math.max(0, saved)));
+  var money = "$" + String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return { pct: pct, label: Math.round(pct) + "%", money: money + " of $4,000" };
+}
+// END LOGIC
+</script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#FAFAF7;color:#111413;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh;display:flex;justify-content:center;overflow-x:hidden}
+main{width:100%;max-width:480px;padding:48px 24px;display:flex;flex-direction:column;justify-content:center;gap:64px}
+.hero{text-align:left}
+.num{font-size:clamp(96px,34vw,168px);line-height:.9;font-weight:800;letter-spacing:-.04em;color:#111413;font-variant-numeric:tabular-nums}
+.line{margin:16px 0 0;font-size:20px;font-weight:600;color:#111413}
+.go{font-size:clamp(64px,24vw,120px);font-weight:800;letter-spacing:-.03em;margin:0}
+.fund h2{margin:0 0 12px;font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B6E6C}
+.bar{position:relative;height:16px;background:#E7E6E0;border-radius:8px;overflow:hidden}
+.fill{height:100%;width:0;background:#C2542A;transition:width .6s ease}
+.tick{position:absolute;top:0;bottom:0;width:2px;background:#FAFAF7}
+.ticks{position:relative;height:20px;margin-top:6px;font-size:13px;color:#6B6E6C}
+.ticks span{position:absolute;transform:translateX(-50%)}
+.stats{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;gap:12px;flex-wrap:wrap}
+.pct{font-size:32px;font-weight:800;color:#C2542A}
+.money{font-size:18px;color:#6B6E6C}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <section class="hero" id="hero" aria-live="polite">
+    <div class="num" id="num"></div>
+    <p class="line" id="line"></p>
+  </section>
+  <section class="fund">
+    <h2>Japan fund</h2>
+    <div class="bar" role="progressbar" aria-label="Japan fund" aria-valuemin="0" aria-valuemax="100" id="bar">
+      <div class="fill" id="fill"></div>
+      <div class="tick" style="left:25%"></div>
+      <div class="tick" style="left:50%"></div>
+      <div class="tick" style="left:75%"></div>
+    </div>
+    <div class="ticks"><span style="left:25%">25%</span><span style="left:50%">50%</span><span style="left:75%">75%</span></div>
+    <div class="stats"><span class="pct" id="pct"></span><span class="money" id="money"></span></div>
+  </section>
+</main>
+<script>
+function render() {
+  var d = daysUntil(TRIP_DATE, new Date());
+  var hero = document.getElementById("hero");
+  if (d <= 0) {
+    hero.innerHTML = '<p class="go">Japan.</p>';
+  } else {
+    hero.innerHTML = '<div class="num" id="num"></div><p class="line" id="line"></p>';
+    document.getElementById("num").textContent = String(d);
+    document.getElementById("line").textContent = d === 1 ? "day until Japan." : "days until Japan.";
+  }
+  var p = progress(SAVED);
+  document.getElementById("fill").style.width = p.pct + "%";
+  document.getElementById("bar").setAttribute("aria-valuenow", String(Math.round(p.pct)));
+  document.getElementById("pct").textContent = p.label;
+  document.getElementById("money").textContent = p.money;
+}
+if (typeof document !== "undefined") {
+  render();
+  if (document.addEventListener) document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") render();
+  });
+}
+</script>
+</body>
+</html>
