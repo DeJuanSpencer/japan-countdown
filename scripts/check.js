@@ -59,4 +59,60 @@ if (progress) {
   report(progress(9999).pct === 100 && progress(-5).pct === 0, "progress clamps to 0-100");
 }
 
+// Timezone sweep: the day count must follow the viewer's local calendar date, not the UTC date.
+// Each zone is applied at runtime and its January and July offsets are asserted first, so a
+// silent fallback to UTC (missing tzdata) fails the zone instead of making the sweep vacuous.
+if (daysUntil) {
+  const zones = [
+    // zone, January offset, July offset, in minutes as Date#getTimezoneOffset reports them
+    ["UTC", 0, 0],
+    ["America/Los_Angeles", 480, 420],
+    ["America/New_York", 300, 240],
+    ["Asia/Tokyo", -540, -540],
+    ["Pacific/Auckland", -780, -720],
+  ];
+  const stamps = [
+    // day of March 2027, hour, minute, required count, whether a smaller count is also accepted
+    [20, 0, 5, 7, false],
+    [20, 23, 55, 7, false],
+    [27, 0, 5, 0, false],
+    [27, 23, 55, 0, false],
+    [28, 0, 5, 0, true],
+  ];
+  const pad = (n) => String(n).padStart(2, "0");
+  const hadTZ = Object.prototype.hasOwnProperty.call(process.env, "TZ");
+  const origTZ = process.env.TZ;
+  try {
+    for (const [zone, wantJan, wantJul] of zones) {
+      process.env.TZ = zone;
+      const gotJan = new Date(2027, 0, 15, 12).getTimezoneOffset();
+      const gotJul = new Date(2027, 6, 15, 12).getTimezoneOffset();
+      const label = "timezone " + zone + ": offsets " + gotJan + "/" + gotJul;
+      if (gotJan !== wantJan || gotJul !== wantJul) {
+        report(false, label, "zone not applied, want " + wantJan + "/" + wantJul);
+        continue;
+      }
+      try {
+        const got = [];
+        const bad = [];
+        for (const [day, hh, mm, want, orLess] of stamps) {
+          const n = daysUntil("2027-03-27", new Date(2027, 2, day, hh, mm));
+          got.push(n);
+          if (orLess ? !(n <= want) : n !== want) {
+            bad.push("03-" + day + " " + pad(hh) + ":" + pad(mm) + " got " + n + ", want " + (orLess ? "<= " : "") + want);
+          }
+        }
+        report(bad.length === 0, label + ", days " + got.join(" "), bad.join("; "));
+      } catch (e) {
+        report(false, label, "day-count logic threw: " + e.message);
+      }
+    }
+  } finally {
+    if (hadTZ) process.env.TZ = origTZ;
+    else delete process.env.TZ;
+  }
+} else {
+  report(false, "timezone sweep ran", "day-count logic was not extracted");
+}
+
 process.exit(failed ? 1 : 0);

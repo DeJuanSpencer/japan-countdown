@@ -29,23 +29,24 @@ function progress(saved) {
 // END LOGIC
 </script>
 <style>
+:root{--paper:#FAFAF7;--ink:#111413;--copper:#C2542A;/* 4.37:1 on paper: large text and non-text only */--muted:#6B6E6C;--hairline:rgba(17,20,19,0.12);--font-sans:'Inter Tight',ui-sans-serif,system-ui,sans-serif;--font-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{background:#FAFAF7;color:#111413;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh;display:flex;justify-content:center;overflow-x:hidden}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-sans);min-height:100vh;min-height:100dvh;display:flex;justify-content:center;overflow-x:hidden}
 main{width:100%;max-width:480px;padding:48px 24px;display:flex;flex-direction:column;justify-content:center;gap:64px}
 .hero{text-align:left}
-.num{font-size:clamp(96px,34vw,168px);line-height:.9;font-weight:800;letter-spacing:-.04em;color:#111413;font-variant-numeric:tabular-nums}
-.line{margin:16px 0 0;font-size:20px;font-weight:600;color:#111413}
+.num{font-size:clamp(96px,34vw,168px);line-height:.9;font-weight:800;letter-spacing:-.04em;color:var(--ink);font-variant-numeric:tabular-nums}
+.line{margin:16px 0 0;font-size:20px;font-weight:600;color:var(--ink)}
 .go{font-size:clamp(64px,24vw,120px);font-weight:800;letter-spacing:-.03em;margin:0}
-.fund h2{margin:0 0 12px;font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B6E6C}
-.bar{position:relative;height:16px;background:#E7E6E0;border-radius:8px;overflow:hidden}
-.fill{height:100%;width:0;background:#C2542A;transition:width .6s ease}
-.tick{position:absolute;top:0;bottom:0;width:2px;background:#FAFAF7}
-.ticks{position:relative;height:20px;margin-top:6px;font-size:13px;color:#6B6E6C}
+.fund h2{margin:0 0 12px;font-family:var(--font-mono);font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.bar{position:relative;height:16px;background:var(--hairline);border-radius:8px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--copper);transition:width .6s ease}
+.tick{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--ink)}
+.ticks{position:relative;height:20px;margin-top:6px;font-family:var(--font-mono);font-size:13px;color:var(--muted)}
 .ticks span{position:absolute;transform:translateX(-50%)}
 .stats{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;gap:12px;flex-wrap:wrap}
-.pct{font-size:32px;font-weight:800;color:#C2542A}
-.money{font-size:18px;color:#6B6E6C}
+.pct{font-size:32px;font-weight:800;color:var(--copper)}
+.money{font-family:var(--font-mono);font-size:18px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.fill{transition:none}}
 </style>
 </head>
@@ -71,12 +72,18 @@ main{width:100%;max-width:480px;padding:48px 24px;display:flex;flex-direction:co
 function render() {
   var d = daysUntil(TRIP_DATE, new Date());
   var hero = document.getElementById("hero");
+  var num = document.getElementById("num");
   if (d <= 0) {
-    hero.innerHTML = '<p class="go">Japan.</p>';
+    if (num) hero.innerHTML = '<p class="go">Japan.</p>';
   } else {
-    hero.innerHTML = '<div class="num" id="num"></div><p class="line" id="line"></p>';
-    document.getElementById("num").textContent = String(d);
-    document.getElementById("line").textContent = d === 1 ? "day until Japan." : "days until Japan.";
+    if (!num) {
+      hero.innerHTML = '<div class="num" id="num"></div><p class="line" id="line"></p>';
+      num = document.getElementById("num");
+    }
+    var line = document.getElementById("line");
+    var text = d === 1 ? "day until Japan." : "days until Japan.";
+    if (num.textContent !== String(d)) num.textContent = String(d);
+    if (line.textContent !== text) line.textContent = text;
   }
   var p = progress(SAVED);
   document.getElementById("fill").style.width = p.pct + "%";
